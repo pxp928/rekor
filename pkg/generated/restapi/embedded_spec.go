@@ -701,32 +701,6 @@ func init() {
         }
       ]
     },
-    "dsse": {
-      "description": "DSSE object",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/ProposedEntry"
-        },
-        {
-          "required": [
-            "apiVersion",
-            "spec"
-          ],
-          "properties": {
-            "apiVersion": {
-              "type": "string",
-              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
-            },
-            "spec": {
-              "type": "object",
-              "$ref": "pkg/types/dsse/dsse_schema.json"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
     "hashedrekord": {
       "description": "Hashed Rekord object",
       "type": "object",
@@ -1555,44 +1529,6 @@ func init() {
       },
       "readOnly": true
     },
-    "DsseV001SchemaPayloadHash": {
-      "description": "hash of the envelope's payload after being PAE encoded",
-      "type": "object",
-      "properties": {
-        "algorithm": {
-          "description": "The hashing function used to compue the hash value",
-          "type": "string",
-          "enum": [
-            "sha256"
-          ]
-        },
-        "value": {
-          "description": "The hash value of the PAE encoded payload",
-          "type": "string"
-        }
-      },
-      "readOnly": true
-    },
-    "DsseV001SchemaSignaturesItems0": {
-      "description": "a signature of the envelope's payload along with the public key for the signature",
-      "type": "object",
-      "properties": {
-        "keyid": {
-          "description": "optional id of the key used to create the signature",
-          "type": "string"
-        },
-        "publicKey": {
-          "description": "public key that corresponds to this signature",
-          "type": "string",
-          "format": "byte",
-          "readOnly": true
-        },
-        "sig": {
-          "description": "signature of the payload",
-          "type": "string"
-        }
-      }
-    },
     "Error": {
       "type": "object",
       "properties": {
@@ -1914,12 +1850,35 @@ func init() {
         }
       }
     },
-    "IntotoV001SchemaContent": {
+    "IntotoV002SchemaContent": {
       "type": "object",
       "properties": {
         "envelope": {
-          "description": "envelope",
-          "type": "string",
+          "description": "dsse envelope",
+          "type": "object",
+          "required": [
+            "payloadType",
+            "signatures"
+          ],
+          "properties": {
+            "payload": {
+              "description": "payload of the envelope",
+              "type": "string",
+              "writeOnly": true
+            },
+            "payloadType": {
+              "description": "type describing the payload",
+              "type": "string"
+            },
+            "signatures": {
+              "description": "collection of all signatures of the envelope's payload",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/IntotoV002SchemaContentEnvelopeSignaturesItems0"
+              }
+            }
+          },
           "writeOnly": true
         },
         "hash": {
@@ -1945,7 +1904,7 @@ func init() {
           "readOnly": true
         },
         "payloadHash": {
-          "description": "Specifies the hash algorithm and value covering the payload within the DSSE envelope",
+          "description": "Specifies the hash algorithm and value covering the envelope's payload after being PAE encoded",
           "type": "object",
           "required": [
             "algorithm",
@@ -1960,7 +1919,7 @@ func init() {
               ]
             },
             "value": {
-              "description": "The hash value for the envelope's payload",
+              "description": "The hash value of the PAE encoded payload",
               "type": "string"
             }
           },
@@ -1968,7 +1927,55 @@ func init() {
         }
       }
     },
-    "IntotoV001SchemaContentHash": {
+    "IntotoV002SchemaContentEnvelope": {
+      "description": "dsse envelope",
+      "type": "object",
+      "required": [
+        "payloadType",
+        "signatures"
+      ],
+      "properties": {
+        "payload": {
+          "description": "payload of the envelope",
+          "type": "string",
+          "writeOnly": true
+        },
+        "payloadType": {
+          "description": "type describing the payload",
+          "type": "string"
+        },
+        "signatures": {
+          "description": "collection of all signatures of the envelope's payload",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/IntotoV002SchemaContentEnvelopeSignaturesItems0"
+          }
+        }
+      },
+      "writeOnly": true
+    },
+    "IntotoV002SchemaContentEnvelopeSignaturesItems0": {
+      "description": "a signature of the envelope's payload along with the public key for the signature",
+      "type": "object",
+      "properties": {
+        "keyid": {
+          "description": "optional id of the key used to create the signature",
+          "type": "string"
+        },
+        "publicKey": {
+          "description": "public key that corresponds to this signature",
+          "type": "string",
+          "format": "byte",
+          "readOnly": true
+        },
+        "sig": {
+          "description": "signature of the payload",
+          "type": "string"
+        }
+      }
+    },
+    "IntotoV002SchemaContentHash": {
       "description": "Specifies the hash algorithm and value encompassing the entire signed envelope",
       "type": "object",
       "required": [
@@ -1990,8 +1997,8 @@ func init() {
       },
       "readOnly": true
     },
-    "IntotoV001SchemaContentPayloadHash": {
-      "description": "Specifies the hash algorithm and value covering the payload within the DSSE envelope",
+    "IntotoV002SchemaContentPayloadHash": {
+      "description": "Specifies the hash algorithm and value covering the envelope's payload after being PAE encoded",
       "type": "object",
       "required": [
         "algorithm",
@@ -2006,7 +2013,7 @@ func init() {
           ]
         },
         "value": {
-          "description": "The hash value for the envelope's payload",
+          "description": "The hash value of the PAE encoded payload",
           "type": "string"
         }
       },
@@ -2851,92 +2858,6 @@ func init() {
       "$schema": "http://json-schema.org/draft-07/schema",
       "$id": "http://rekor.sigstore.dev/types/intoto/intoto_v0_0_1_schema.json"
     },
-    "dsse": {
-      "description": "DSSE object",
-      "type": "object",
-      "allOf": [
-        {
-          "$ref": "#/definitions/ProposedEntry"
-        },
-        {
-          "required": [
-            "apiVersion",
-            "spec"
-          ],
-          "properties": {
-            "apiVersion": {
-              "type": "string",
-              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
-            },
-            "spec": {
-              "$ref": "#/definitions/dsseSchema"
-            }
-          },
-          "additionalProperties": false
-        }
-      ]
-    },
-    "dsseSchema": {
-      "description": "DSSE for Rekord objects",
-      "type": "object",
-      "title": "DSSE Schema",
-      "oneOf": [
-        {
-          "$ref": "#/definitions/dsseV001Schema"
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema",
-      "$id": "http://rekor.sigstore.dev/types/dsse/dsse_schema.json"
-    },
-    "dsseV001Schema": {
-      "description": "Schema for dsse object",
-      "type": "object",
-      "title": "dsse v0.0.1 Schema",
-      "required": [
-        "payloadType",
-        "signatures"
-      ],
-      "properties": {
-        "payload": {
-          "description": "payload of the envelope",
-          "type": "string",
-          "format": "byte",
-          "writeOnly": true
-        },
-        "payloadHash": {
-          "description": "hash of the envelope's payload after being PAE encoded",
-          "type": "object",
-          "properties": {
-            "algorithm": {
-              "description": "The hashing function used to compue the hash value",
-              "type": "string",
-              "enum": [
-                "sha256"
-              ]
-            },
-            "value": {
-              "description": "The hash value of the PAE encoded payload",
-              "type": "string"
-            }
-          },
-          "readOnly": true
-        },
-        "payloadType": {
-          "description": "type describing the payload",
-          "type": "string"
-        },
-        "signatures": {
-          "description": "collection of all signatures of the envelope's payload",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/definitions/DsseV001SchemaSignaturesItems0"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema",
-      "$id": "http://rekor.sigstore.dev/types/dsse/dsse_v0_0_1_schema.json"
-    },
     "hashedrekord": {
       "description": "Hashed Rekord object",
       "type": "object",
@@ -3201,18 +3122,17 @@ func init() {
       "title": "Intoto Schema",
       "oneOf": [
         {
-          "$ref": "#/definitions/intotoV001Schema"
+          "$ref": "#/definitions/intotoV002Schema"
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema",
       "$id": "http://rekor.sigstore.dev/types/intoto/intoto_schema.json"
     },
-    "intotoV001Schema": {
+    "intotoV002Schema": {
       "description": "Schema for intoto object",
       "type": "object",
-      "title": "intoto v0.0.1 Schema",
+      "title": "intoto v0.0.2 Schema",
       "required": [
-        "publicKey",
         "content"
       ],
       "properties": {
@@ -3220,8 +3140,31 @@ func init() {
           "type": "object",
           "properties": {
             "envelope": {
-              "description": "envelope",
-              "type": "string",
+              "description": "dsse envelope",
+              "type": "object",
+              "required": [
+                "payloadType",
+                "signatures"
+              ],
+              "properties": {
+                "payload": {
+                  "description": "payload of the envelope",
+                  "type": "string",
+                  "writeOnly": true
+                },
+                "payloadType": {
+                  "description": "type describing the payload",
+                  "type": "string"
+                },
+                "signatures": {
+                  "description": "collection of all signatures of the envelope's payload",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/definitions/IntotoV002SchemaContentEnvelopeSignaturesItems0"
+                  }
+                }
+              },
               "writeOnly": true
             },
             "hash": {
@@ -3247,7 +3190,7 @@ func init() {
               "readOnly": true
             },
             "payloadHash": {
-              "description": "Specifies the hash algorithm and value covering the payload within the DSSE envelope",
+              "description": "Specifies the hash algorithm and value covering the envelope's payload after being PAE encoded",
               "type": "object",
               "required": [
                 "algorithm",
@@ -3262,22 +3205,17 @@ func init() {
                   ]
                 },
                 "value": {
-                  "description": "The hash value for the envelope's payload",
+                  "description": "The hash value of the PAE encoded payload",
                   "type": "string"
                 }
               },
               "readOnly": true
             }
           }
-        },
-        "publicKey": {
-          "description": "The public key that can verify the signature",
-          "type": "string",
-          "format": "byte"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema",
-      "$id": "http://rekor.sigstore.dev/types/intoto/intoto_v0_0_1_schema.json"
+      "$id": "http://rekor.sigstore.dev/types/intoto/intoto_v0_0_2_schema.json"
     },
     "jar": {
       "description": "Java Archive (JAR)",
